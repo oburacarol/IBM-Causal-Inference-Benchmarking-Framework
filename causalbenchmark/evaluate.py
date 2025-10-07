@@ -27,8 +27,8 @@ HEADER_Y1 = "y1"                            # cf files + individual prediction f
 HEADER_Y0 = "y0"                            # cf files + individual prediction files: outcome under no treatment
 HEADER_IND_IDX = "sample_id"                # cf files + individual prediction files: index column, sample id
 HEADER_EFFECT_SIZE = "effect_size"          # prediction files + population prediction files: population effect size
-HEADER_CI_LEFT = "ci_left"           # prediction files + population prediction files: left confidence interval boundary
-HEADER_CI_RIGHT = "ci_right"          # prediction files + population prediction files: right confidence interval boundary
+HEADER_CI_LEFT = "li"           # prediction files + population prediction files: left confidence interval boundary
+HEADER_CI_RIGHT = "ri"          # prediction files + population prediction files: right confidence interval boundary
 HEADER_POP_IDX = "ufid"         # population prediction files: index column containing names of data instances
 
 EPSILON = 1e-7                      # floating point baseline to avoid zero-division
@@ -82,7 +82,7 @@ def _score_population(predictions_location, cf_dir_location):
     for ufid in ufids:
         # Get the true effect:
         gt = pd.read_csv(os.path.join(cf_dir_location, ufid + COUNTERFACTUAL_FILE_SUFFIX + FILENAME_EXTENSION),
-                         sep=TABULAR_DELIMITER)
+                         sep='\t')
         true_effect = np.mean(gt[HEADER_Y1] - gt[HEADER_Y0])
         true_effects[ufid] = true_effect
 
@@ -135,7 +135,8 @@ def _score_population(predictions_location, cf_dir_location):
         results["coverage"] = weighted_sum(coverage_by_size, weights)
         results["encis"] = weighted_sum(encis_by_size, weights)
         results["cic"] = weighted_sum(cic_by_size, weights)
-        results = results.append(enormse_by_size.add_prefix("enormse_"))
+        # results = results.append(enormse_by_size.add_prefix("enormse_")) #deprecated style
+        results = pd.concat([results, enormse_by_size.add_prefix("enormse_")]) # current pandas version
 
     return results
 
@@ -177,13 +178,13 @@ def _score_individual(predictions_location, cf_dir_location):
     for ufid in ufids:
         # Get the true effect:
         gt = pd.read_csv(os.path.join(cf_dir_location, ufid + COUNTERFACTUAL_FILE_SUFFIX + FILENAME_EXTENSION),
-                         index_col=HEADER_IND_IDX, sep=TABULAR_DELIMITER)
+                         index_col=HEADER_IND_IDX, sep='\t')
         true_effect = gt[HEADER_Y1] - gt[HEADER_Y0]
 
         # Get estimated effect:                         submission format:    N rows: patient_ID | Y0 | Y1
         try:
             estimates = pd.read_csv(os.path.join(predictions_location, ufid + FILENAME_EXTENSION),
-                                    index_col=HEADER_IND_IDX, sep=TABULAR_DELIMITER)
+                                    index_col=HEADER_IND_IDX, sep='\t')
         except IOError as e:           # Python 2 compatible for FileNotFoundError
             e.args = (e.args[0] + "\n\t" + "A prediction might be missing.\n"
                                            "Seems that the file ({fn}) was found in the ground-truth directory but no "
@@ -346,7 +347,7 @@ def __main(argv):
 
     # Output results
     if argv.output_path is not None:
-        scores.to_csv(argv.output_path, header=True, index=True, encoding="utf-8", decimal=".", sep=TABULAR_DELIMITER)
+        scores.to_csv(argv.output_path, header=True, index=True, encoding="utf-8", decimal=".", sep='\t')
     else:
         print("\n", scores)
 

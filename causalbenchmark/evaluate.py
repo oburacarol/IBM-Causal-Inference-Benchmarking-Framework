@@ -221,7 +221,8 @@ def _score_individual(predictions_location, cf_dir_location):
         results["enormse"] = np.sqrt(enormse_by_size.pow(2).mul(weights).sum() / weights.sum())
         results["rmse"] = np.sqrt(rmse_by_size.pow(2).mul(weights).sum() / weights.sum())
         results["bias"] = bias_by_size.mul(weights).sum() / weights.sum()
-        results = results.append(enormse_by_size.add_prefix("enormse_"))
+        # results = results.append(enormse_by_size.add_prefix("enormse_")) # deprecated style
+        results = pd.concat([results, enormse_by_size.add_prefix("enormse_")]) # current pandas version
     return results
 
 

@@ -27,8 +27,8 @@ HEADER_Y1 = "y1"                            # cf files + individual prediction f
 HEADER_Y0 = "y0"                            # cf files + individual prediction files: outcome under no treatment
 HEADER_IND_IDX = "sample_id"                # cf files + individual prediction files: index column, sample id
 HEADER_EFFECT_SIZE = "effect_size"          # prediction files + population prediction files: population effect size
-HEADER_CI_LEFT = "li"           # prediction files + population prediction files: left confidence interval boundary
-HEADER_CI_RIGHT = "ri"          # prediction files + population prediction files: right confidence interval boundary
+HEADER_CI_LEFT = "ci_left"           # prediction files + population prediction files: left confidence interval boundary
+HEADER_CI_RIGHT = "ci_right"          # prediction files + population prediction files: right confidence interval boundary
 HEADER_POP_IDX = "ufid"         # population prediction files: index column containing names of data instances
 
 EPSILON = 1e-7                      # floating point baseline to avoid zero-division
@@ -69,7 +69,7 @@ def _score_population(predictions_location, cf_dir_location):
     coverage = pd.Series(data=False, index=ufids, dtype=np.dtype(bool), name="population_coverage")
 
     # Get data:      # HEADER_POP_IDX | HEADER_EFFECT_SIZE | HEADER_CI_LEFT | HEADER_CI_RIGHT
-    estimates = pd.read_csv(predictions_location, index_col=HEADER_POP_IDX, sep=TABULAR_DELIMITER)
+    estimates = pd.read_csv(predictions_location, index_col=HEADER_POP_IDX, sep='\t')
 
     if set(ufids) - set(estimates.index):
         raise_with_traceback(AssertionError("Seems there are ground-truth files with no corresponding predictions\n"
